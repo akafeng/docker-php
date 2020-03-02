@@ -1,0 +1,33 @@
+name: Docker Build And Publish
+
+on:
+  release:
+    types:
+      - published
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.0.0
+
+      - name: Build And Publish
+        uses: jerray/publish-docker-action@v1.0.3
+        with:
+          username: akafeng
+          password: ${{ secrets.DOCKER_TOKEN }}
+          repository: akafeng/php
+          cache: akafeng/php
+          auto_tag: true
+
+      - name: Docker Login
+        uses: azure/docker-login@v1
+        with:
+          username: akafeng
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      - name: Publish Latest Docker Tag
+        run: |
+          docker tag $(docker images | awk '{print $3}' | awk 'NR==2') akafeng/php:latest
+          docker push akafeng/php:latest

@@ -1,0 +1,406 @@
+FROM debian:buster-slim as builder
+
+LABEL maintainer="akafeng <i@sjy.im>, metowolf <i@i-meto.com>"
+
+ARG PHP_VERSION="7.3.15"
+ARG GPG_KEYS="CBAF69F173A0FEA4B537F470D66C9593118BCCB6 F38252826ACD957EF380D39F2F7956BC5DA04B5D"
+ARG COMPOSER_VERSION="1.9.3"
+
+ARG PHP_URL="https://www.php.net/get/php-$PHP_VERSION.tar.xz/from/this/mirror"
+ARG PHP_ASC_URL="https://www.php.net/get/php-$PHP_VERSION.tar.xz.asc/from/this/mirror"
+ARG COMPOSER_URL="https://getcomposer.org/download/$COMPOSER_VERSION/composer.phar"
+
+ARG PHP_CFLAGS="-fstack-protector-strong -fpic -fpie -O3 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64"
+ARG PHP_CPPFLAGS="$PHP_CFLAGS"
+ARG PHP_LDFLAGS="-Wl,-O1 -Wl,--hash-style=both -pie"
+
+ARG PHP_INI_DIR="/usr/local/etc/php"
+
+RUN set -eux \
+    && apt-get update -qyy \
+    && apt-get install -qyy --no-install-recommends --no-install-suggests \
+        ca-certificates \
+        wget \
+        gnupg \
+    \
+    && mkdir -p /usr/src \
+    && cd /usr/src \
+    && wget -O php.tar.xz "$PHP_URL" \
+    && wget -O php.tar.xz.asc "$PHP_ASC_URL" \
+    \
+    && export GNUPGHOME="$(mktemp -d)" \
+    && for key in $GPG_KEYS; do \
+            gpg --batch --keyserver ha.pool.sks-keyservers.net --keyserver-options timeout=10 --recv-keys "$key" || \
+            gpg --batch --keyserver hkp://ipv4.pool.sks-keyservers.net --keyserver-options timeout=10 --recv-keys "$key" || \
+            gpg --batch --keyserver hkp://pgp.mit.edu:80 --keyserver-options timeout=10 --recv-keys "$key" ; \
+        done \
+    && gpg --batch --verify php.tar.xz.asc php.tar.xz \
+    && gpgconf --kill all
+
+COPY docker-php-source /usr/local/bin/
+
+RUN set -eux \
+    && apt-get install -qyy --no-install-recommends --no-install-suggests \
+        xz-utils \
+        autoconf \
+        dpkg-dev \
+        file \
+        g++ \
+        gcc \
+        pkg-config \
+        re2c \
+        bison \
+        libargon2-dev \
+        libcurl4-openssl-dev \
+        libedit-dev \
+        libsodium-dev \
+        libssl-dev \
+        libxml2-dev \
+        zlib1g-dev \
+    \
+    && docker-php-source extract \
+    && mkdir -p "$PHP_INI_DIR/conf.d" \
+    \
+    && cd /usr/src/php \
+    && export \
+        CFLAGS="$PHP_CFLAGS" \
+        CPPFLAGS="$PHP_CPPFLAGS" \
+        LDFLAGS="$PHP_LDFLAGS" \
+    && gnuArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)" \
+    && ./configure \
+        --build="$gnuArch" \
+        --with-config-file-path="$PHP_INI_DIR" \
+        --with-config-file-scan-dir="$PHP_INI_DIR/conf.d" \
+        --enable-option-checking=fatal \
+        --with-mhash \
+        --enable-ftp \
+        --enable-mbstring \
+        --enable-mysqlnd \
+        --with-password-argon2 \
+        --with-sodium=shared \
+        --with-curl \
+        --with-libedit \
+        --with-openssl \
+        --with-zlib \
+        --with-pear \
+        --enable-fpm \
+        --with-fpm-user=www-data \
+        --with-fpm-group=www-data \
+        --disable-cgi \
+    && make -j "$(nproc)" \
+    && make install \
+    && { find /usr/local/bin /usr/local/sbin -type f -executable -exec strip --strip-all '{}' + || true; } \
+    && make clean \
+    && cp -v php.ini-* "$PHP_INI_DIR/" \
+    && cd / \
+    && docker-php-source delete
+
+COPY docker-php-ext-* docker-entrypoint.sh /usr/local/bin/
+
+# pickle
+RUN wget -O /usr/bin/pickle https://github.com/FriendsOfPHP/pickle/releases/download/v0.4.0/pickle.phar \
+    && chmod a+x /usr/bin/pickle
+
+# apcu
+RUN { pickle install apcu --no-interaction --defaults || true; } \
+    && cd /tmp/apcu/apcu* \
+    && phpize \
+    && ./configure \
+    && make -j "$(nproc)" \
+    && make install \
+    && docker-php-ext-enable apcu \
+    && { rm -rf /usr/local/lib/php/test/apcu || true; } \
+    && { rm -rf /usr/local/lib/php/doc/apcu || true; }
+
+# bcmath
+RUN docker-php-ext-install -j "$(nproc)" bcmath \
+    && { rm -rf /usr/local/lib/php/test/bcmath || true; } \
+    && { rm -rf /usr/local/lib/php/doc/bcmath || true; }
+
+# exif
+RUN docker-php-ext-install -j "$(nproc)" exif \
+    && { rm -rf /usr/local/lib/php/test/exif || true; } \
+    && { rm -rf /usr/local/lib/php/doc/exif || true; }
+
+# gd
+RUN apt-get install -qyy --no-install-recommends --no-install-suggests \
+        libpng-dev \
+        libwebp-dev \
+        libjpeg62-turbo-dev \
+        libxpm-dev \
+        libfreetype6-dev \
+    \
+    # temporary "freetype-config" workaround for https://github.com/docker-library/php/issues/865 (https://bugs.php.net/bug.php?id=76324)
+    && { echo '#!/bin/sh'; echo 'exec pkg-config "$@" freetype2'; } > /usr/local/bin/freetype-config \
+    && chmod +x /usr/local/bin/freetype-config \
+    \
+    && docker-php-ext-configure gd \
+        --with-gd \
+        --with-webp-dir=/usr \
+        --with-jpeg-dir=/usr \
+        --with-png-dir=/usr \
+        --with-zlib-dir=/usr \
+        --with-xpm-dir=/usr \
+        --with-freetype-dir=/usr \
+        --enable-gd-jis-conv \
+    && docker-php-ext-install -j "$(nproc)" gd \
+    && { rm -rf /usr/local/lib/php/test/gd || true; } \
+    && { rm -rf /usr/local/lib/php/doc/gd || true; }
+
+# gettext
+RUN docker-php-ext-install -j "$(nproc)" gettext \
+    && { rm -rf /usr/local/lib/php/test/gettext || true; } \
+    && { rm -rf /usr/local/lib/php/doc/gettext || true; }
+
+# gmp
+RUN apt-get install -qyy --no-install-recommends --no-install-suggests \
+        libgmp-dev \
+    && docker-php-ext-install -j "$(nproc)" gmp \
+    && { rm -rf /usr/local/lib/php/test/gmp || true; } \
+    && { rm -rf /usr/local/lib/php/doc/gmp || true; }
+
+# imagick
+RUN apt-get install -qyy --no-install-recommends --no-install-suggests \
+        libmagickwand-dev \
+    && { pickle install imagick --no-interaction --defaults || true; } \
+    && cd /tmp/imagick/imagick* \
+    && phpize \
+    && ./configure \
+    && make -j "$(nproc)" \
+    && make install \
+    && docker-php-ext-enable imagick \
+    && { rm -rf /usr/local/lib/php/test/imagick || true; } \
+    && { rm -rf /usr/local/lib/php/doc/imagick || true; }
+
+# intl
+RUN docker-php-ext-install -j "$(nproc)" intl \
+    && { rm -rf /usr/local/lib/php/test/intl || true; } \
+    && { rm -rf /usr/local/lib/php/doc/intl || true; }
+
+# memcached
+RUN apt-get install -qyy --no-install-recommends --no-install-suggests \
+        libmemcached-dev \
+    && { pickle install memcached --no-interaction --defaults || true; } \
+    && cd /tmp/memcached/memcached* \
+    && phpize \
+    && ./configure \
+    && make -j "$(nproc)" \
+    && make install \
+    && docker-php-ext-enable memcached \
+    && { rm -rf /usr/local/lib/php/test/memcached || true; } \
+    && { rm -rf /usr/local/lib/php/doc/memcached || true; }
+
+# mysqli
+RUN docker-php-ext-install -j "$(nproc)" mysqli \
+    && { rm -rf /usr/local/lib/php/test/mysqli || true; } \
+    && { rm -rf /usr/local/lib/php/doc/mysqli || true; }
+
+# opcache
+RUN docker-php-ext-install -j "$(nproc)" opcache \
+    && { rm -rf /usr/local/lib/php/test/opcache || true; } \
+    && { rm -rf /usr/local/lib/php/doc/opcache || true; }
+
+# pcntl
+RUN docker-php-ext-install -j "$(nproc)" pcntl \
+    && { rm -rf /usr/local/lib/php/test/pcntl || true; } \
+    && { rm -rf /usr/local/lib/php/doc/pcntl || true; }
+
+# pdo_mysql
+RUN docker-php-ext-install -j "$(nproc)" pdo_mysql \
+    && { rm -rf /usr/local/lib/php/test/pdo_mysql || true; } \
+    && { rm -rf /usr/local/lib/php/doc/pdo_mysql || true; }
+
+# pdo_pgsql
+RUN apt-get install -qyy --no-install-recommends --no-install-suggests \
+        libpq-dev \
+    && docker-php-ext-install -j "$(nproc)" pdo_pgsql \
+    && { rm -rf /usr/local/lib/php/test/pdo_pgsql || true; } \
+    && { rm -rf /usr/local/lib/php/doc/pdo_pgsql || true; }
+
+# pgsql
+RUN docker-php-ext-install -j "$(nproc)" pgsql \
+    && { rm -rf /usr/local/lib/php/test/pgsql || true; } \
+    && { rm -rf /usr/local/lib/php/doc/pgsql || true; }
+
+# redis
+RUN { pickle install redis --no-interaction --defaults || true; } \
+    && cd /tmp/redis/redis* \
+    && phpize \
+    && ./configure \
+    && make -j "$(nproc)" \
+    && make install \
+    && docker-php-ext-enable redis \
+    && { rm -rf /usr/local/lib/php/test/redis || true; } \
+    && { rm -rf /usr/local/lib/php/doc/redis || true; }
+
+# shmop
+RUN docker-php-ext-install -j "$(nproc)" shmop \
+    && { rm -rf /usr/local/lib/php/test/shmop || true; } \
+    && { rm -rf /usr/local/lib/php/doc/shmop || true; }
+
+# soap
+RUN docker-php-ext-install -j "$(nproc)" soap \
+    && { rm -rf /usr/local/lib/php/test/soap || true; } \
+    && { rm -rf /usr/local/lib/php/doc/soap || true; }
+
+# sockets
+RUN docker-php-ext-install -j "$(nproc)" sockets \
+    && { rm -rf /usr/local/lib/php/test/sockets || true; } \
+    && { rm -rf /usr/local/lib/php/doc/sockets || true; }
+
+# sodium
+RUN docker-php-ext-enable sodium \
+    && { rm -rf /usr/local/lib/php/test/sodium || true; } \
+    && { rm -rf /usr/local/lib/php/doc/sodium || true; }
+
+# swoole
+RUN { pickle install swoole --no-interaction --defaults || true; } \
+    && cd /tmp/swoole/swoole* \
+    && phpize \
+    && ./configure \
+        --enable-openssl \
+        --enable-sockets \
+        --enable-http2 \
+        --enable-mysqlnd \
+    && make -j "$(nproc)" \
+    && make install \
+    && docker-php-ext-enable swoole \
+    && { rm -rf /usr/local/lib/php/test/swoole || true; } \
+    && { rm -rf /usr/local/lib/php/doc/swoole || true; }
+
+# sysvsem
+RUN docker-php-ext-install -j "$(nproc)" sysvsem \
+    && { rm -rf /usr/local/lib/php/test/sysvsem || true; } \
+    && { rm -rf /usr/local/lib/php/doc/sysvsem || true; }
+
+# tidy
+RUN apt-get install -qyy --no-install-recommends --no-install-suggests \
+        libtidy-dev \
+    && docker-php-ext-install -j "$(nproc)" tidy \
+    && { rm -rf /usr/local/lib/php/test/tidy || true; } \
+    && { rm -rf /usr/local/lib/php/doc/tidy || true; }
+
+# xmlrpc
+RUN docker-php-ext-install -j "$(nproc)" xmlrpc \
+    && { rm -rf /usr/local/lib/php/test/xmlrpc || true; } \
+    && { rm -rf /usr/local/lib/php/doc/xmlrpc || true; }
+
+# xsl
+RUN apt-get install -qyy --no-install-recommends --no-install-suggests \
+        libxslt1-dev \
+    && docker-php-ext-install -j "$(nproc)" xsl \
+    && { rm -rf /usr/local/lib/php/test/xsl || true; } \
+    && { rm -rf /usr/local/lib/php/doc/xsl || true; }
+
+# zip
+RUN apt-get install -qyy --no-install-recommends --no-install-suggests \
+        libzip-dev \
+    && docker-php-ext-install -j "$(nproc)" zip \
+    && { rm -rf /usr/local/lib/php/test/zip || true; } \
+    && { rm -rf /usr/local/lib/php/doc/zip || true; }
+
+# composer
+RUN wget -O /usr/local/bin/composer "$COMPOSER_URL" \
+    && chmod a+x /usr/local/bin/composer
+
+# strip extensions
+RUN strip --strip-all `php-config --extension-dir`/*.so
+
+FROM debian:buster-slim
+
+LABEL maintainer="akafeng <i@sjy.im>, metowolf <i@i-meto.com>"
+
+COPY --from=builder /usr/local/ /usr/local/
+
+RUN set -eux \
+    && apt-get update -qyy \
+    && apt-get install -qyy --no-install-recommends --no-install-suggests \
+        cron \
+        libargon2-1 \
+        libcurl4 \
+        libedit2 \
+        libsodium23 \
+        libssl1.1 \
+        libxml2 \
+        libncurses6 \
+        libpng16-16 \
+        libwebp6 \
+        libjpeg62-turbo \
+        libxpm4 \
+        libfreetype6 \
+        libmagickwand-6.q16-6 \
+        libicu63 \
+        libmemcached11 \
+        libmemcachedutil2 \
+        libpq5 \
+        libtidy5deb1 \
+        libxslt1.1 \
+        libzip4 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+    \
+    && mkdir -p /var/www/html \
+    && chown www-data:www-data /var/www/html \
+    && chmod 777 /var/www/html \
+    \
+    && cd /usr/local/etc \
+    && if [ -d php-fpm.d ]; then \
+            sed 's!=NONE/!=!g' php-fpm.conf.default | tee php-fpm.conf > /dev/null; \
+            cp php-fpm.d/www.conf.default php-fpm.d/www.conf; \
+        else \
+            mkdir php-fpm.d; \
+            cp php-fpm.conf.default php-fpm.d/www.conf; \
+            { \
+                echo '[global]'; \
+                echo 'include=etc/php-fpm.d/*.conf'; \
+            } | tee php-fpm.conf; \
+        fi \
+    && { \
+            echo '[global]'; \
+            echo 'error_log = /proc/self/fd/2'; \
+            echo; \
+            echo '; https://github.com/docker-library/php/pull/725#issuecomment-443540114'; \
+            echo 'log_limit = 8192'; \
+            echo; \
+            echo '[www]'; \
+            echo '; if we send this to /proc/self/fd/1, it never appears'; \
+            echo 'access.log = /proc/self/fd/2'; \
+            echo; \
+            echo 'clear_env = no'; \
+            echo; \
+            echo '; Ensure worker stdout and stderr are sent to the main error log.'; \
+            echo 'catch_workers_output = yes'; \
+            echo 'decorate_workers_output = no'; \
+        } | tee php-fpm.d/docker.conf \
+    && { \
+            echo '[global]'; \
+            echo 'daemonize = no'; \
+            echo; \
+            echo '[www]'; \
+            echo 'listen = 9000'; \
+        } | tee php-fpm.d/zz-docker.conf \
+    && { \
+            echo 'opcache.memory_consumption = 128'; \
+            echo 'opcache.interned_strings_buffer = 8'; \
+            echo 'opcache.max_accelerated_files = 4000'; \
+            echo 'opcache.revalidate_freq = 60'; \
+            echo 'opcache.fast_shutdown = 1'; \
+            echo 'opcache.enable_cli = 1'; \
+        } > /usr/local/etc/php/conf.d/opcache-recommended.ini \
+    && { \
+            echo 'memory_limit = 256M'; \
+            echo 'upload_max_filesize = 50M'; \
+            echo 'post_max_size = 100M'; \
+            echo 'max_execution_time = 600'; \
+            echo 'default_socket_timeout = 3600'; \
+            echo 'request_terminate_timeout = 600'; \
+        } > /usr/local/etc/php/conf.d/options.ini
+
+WORKDIR /var/www/html
+
+ENTRYPOINT ["docker-entrypoint.sh"]
+
+STOPSIGNAL SIGQUIT
+
+EXPOSE 9000
+CMD ["php-fpm"]
