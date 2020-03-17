@@ -4,7 +4,7 @@ LABEL maintainer="akafeng <i@sjy.im>, metowolf <i@i-meto.com>"
 
 ARG PHP_VERSION="7.3.15"
 ARG GPG_KEYS="CBAF69F173A0FEA4B537F470D66C9593118BCCB6 F38252826ACD957EF380D39F2F7956BC5DA04B5D"
-ARG COMPOSER_VERSION="1.9.3"
+ARG COMPOSER_VERSION="1.10.1"
 
 ARG PHP_URL="https://www.php.net/get/php-$PHP_VERSION.tar.xz/from/this/mirror"
 ARG PHP_ASC_URL="https://www.php.net/get/php-$PHP_VERSION.tar.xz.asc/from/this/mirror"
@@ -22,6 +22,7 @@ RUN set -eux \
         ca-certificates \
         wget \
         gnupg \
+    && rm -rf /var/lib/apt/lists/* \
     \
     && mkdir -p /usr/src \
     && cd /usr/src \
@@ -35,11 +36,13 @@ RUN set -eux \
             gpg --batch --keyserver hkp://pgp.mit.edu:80 --keyserver-options timeout=10 --recv-keys "$key" ; \
         done \
     && gpg --batch --verify php.tar.xz.asc php.tar.xz \
-    && gpgconf --kill all
+    && gpgconf --kill all \
+    && rm -rf "$GNUPGHOME"
 
 COPY docker-php-source /usr/local/bin/
 
 RUN set -eux \
+    && apt-get update -qyy \
     && apt-get install -qyy --no-install-recommends --no-install-suggests \
         xz-utils \
         autoconf \
@@ -57,6 +60,7 @@ RUN set -eux \
         libssl-dev \
         libxml2-dev \
         zlib1g-dev \
+    && rm -rf /var/lib/apt/lists/* \
     \
     && docker-php-source extract \
     && mkdir -p "$PHP_INI_DIR/conf.d" \
@@ -95,7 +99,7 @@ RUN set -eux \
     && cd / \
     && docker-php-source delete
 
-COPY docker-php-ext-* docker-entrypoint.sh /usr/local/bin/
+COPY docker-php-ext-* /usr/local/bin/
 
 # pickle
 RUN wget -O /usr/bin/pickle https://github.com/FriendsOfPHP/pickle/releases/download/v0.4.0/pickle.phar \
@@ -123,12 +127,14 @@ RUN docker-php-ext-install -j "$(nproc)" exif \
     && { rm -rf /usr/local/lib/php/doc/exif || true; }
 
 # gd
-RUN apt-get install -qyy --no-install-recommends --no-install-suggests \
+RUN apt-get update -qyy \
+    && apt-get install -qyy --no-install-recommends --no-install-suggests \
         libpng-dev \
         libwebp-dev \
         libjpeg62-turbo-dev \
         libxpm-dev \
         libfreetype6-dev \
+    && rm -rf /var/lib/apt/lists/* \
     \
     # temporary "freetype-config" workaround for https://github.com/docker-library/php/issues/865 (https://bugs.php.net/bug.php?id=76324)
     && { echo '#!/bin/sh'; echo 'exec pkg-config "$@" freetype2'; } > /usr/local/bin/freetype-config \
@@ -142,7 +148,6 @@ RUN apt-get install -qyy --no-install-recommends --no-install-suggests \
         --with-zlib-dir=/usr \
         --with-xpm-dir=/usr \
         --with-freetype-dir=/usr \
-        --enable-gd-jis-conv \
     && docker-php-ext-install -j "$(nproc)" gd \
     && { rm -rf /usr/local/lib/php/test/gd || true; } \
     && { rm -rf /usr/local/lib/php/doc/gd || true; }
@@ -153,15 +158,21 @@ RUN docker-php-ext-install -j "$(nproc)" gettext \
     && { rm -rf /usr/local/lib/php/doc/gettext || true; }
 
 # gmp
-RUN apt-get install -qyy --no-install-recommends --no-install-suggests \
+RUN apt-get update -qyy \
+    && apt-get install -qyy --no-install-recommends --no-install-suggests \
         libgmp-dev \
+    && rm -rf /var/lib/apt/lists/* \
+    \
     && docker-php-ext-install -j "$(nproc)" gmp \
     && { rm -rf /usr/local/lib/php/test/gmp || true; } \
     && { rm -rf /usr/local/lib/php/doc/gmp || true; }
 
 # imagick
-RUN apt-get install -qyy --no-install-recommends --no-install-suggests \
+RUN apt-get update -qyy \
+    && apt-get install -qyy --no-install-recommends --no-install-suggests \
         libmagickwand-dev \
+    && rm -rf /var/lib/apt/lists/* \
+    \
     && { pickle install imagick --no-interaction --defaults || true; } \
     && cd /tmp/imagick/imagick* \
     && phpize \
@@ -178,8 +189,11 @@ RUN docker-php-ext-install -j "$(nproc)" intl \
     && { rm -rf /usr/local/lib/php/doc/intl || true; }
 
 # memcached
-RUN apt-get install -qyy --no-install-recommends --no-install-suggests \
+RUN apt-get update -qyy \
+    && apt-get install -qyy --no-install-recommends --no-install-suggests \
         libmemcached-dev \
+    && rm -rf /var/lib/apt/lists/* \
+    \
     && { pickle install memcached --no-interaction --defaults || true; } \
     && cd /tmp/memcached/memcached* \
     && phpize \
@@ -211,8 +225,11 @@ RUN docker-php-ext-install -j "$(nproc)" pdo_mysql \
     && { rm -rf /usr/local/lib/php/doc/pdo_mysql || true; }
 
 # pdo_pgsql
-RUN apt-get install -qyy --no-install-recommends --no-install-suggests \
+RUN apt-get update -qyy \
+    && apt-get install -qyy --no-install-recommends --no-install-suggests \
         libpq-dev \
+    && rm -rf /var/lib/apt/lists/* \
+    \
     && docker-php-ext-install -j "$(nproc)" pdo_pgsql \
     && { rm -rf /usr/local/lib/php/test/pdo_pgsql || true; } \
     && { rm -rf /usr/local/lib/php/doc/pdo_pgsql || true; }
@@ -274,8 +291,11 @@ RUN docker-php-ext-install -j "$(nproc)" sysvsem \
     && { rm -rf /usr/local/lib/php/doc/sysvsem || true; }
 
 # tidy
-RUN apt-get install -qyy --no-install-recommends --no-install-suggests \
+RUN apt-get update -qyy \
+    && apt-get install -qyy --no-install-recommends --no-install-suggests \
         libtidy-dev \
+    && rm -rf /var/lib/apt/lists/* \
+    \
     && docker-php-ext-install -j "$(nproc)" tidy \
     && { rm -rf /usr/local/lib/php/test/tidy || true; } \
     && { rm -rf /usr/local/lib/php/doc/tidy || true; }
@@ -286,15 +306,21 @@ RUN docker-php-ext-install -j "$(nproc)" xmlrpc \
     && { rm -rf /usr/local/lib/php/doc/xmlrpc || true; }
 
 # xsl
-RUN apt-get install -qyy --no-install-recommends --no-install-suggests \
+RUN apt-get update -qyy \
+    && apt-get install -qyy --no-install-recommends --no-install-suggests \
         libxslt1-dev \
+    && rm -rf /var/lib/apt/lists/* \
+    \
     && docker-php-ext-install -j "$(nproc)" xsl \
     && { rm -rf /usr/local/lib/php/test/xsl || true; } \
     && { rm -rf /usr/local/lib/php/doc/xsl || true; }
 
 # zip
-RUN apt-get install -qyy --no-install-recommends --no-install-suggests \
+RUN apt-get update -qyy \
+    && apt-get install -qyy --no-install-recommends --no-install-suggests \
         libzip-dev \
+    && rm -rf /var/lib/apt/lists/* \
+    \
     && docker-php-ext-install -j "$(nproc)" zip \
     && { rm -rf /usr/local/lib/php/test/zip || true; } \
     && { rm -rf /usr/local/lib/php/doc/zip || true; }
@@ -336,7 +362,6 @@ RUN set -eux \
         libtidy5deb1 \
         libxslt1.1 \
         libzip4 \
-    && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     \
     && mkdir -p /var/www/html \
@@ -396,9 +421,10 @@ RUN set -eux \
             echo 'request_terminate_timeout = 600'; \
         } > /usr/local/etc/php/conf.d/options.ini
 
-WORKDIR /var/www/html
-
+COPY docker-entrypoint.sh /usr/local/bin/
 ENTRYPOINT ["docker-entrypoint.sh"]
+
+WORKDIR /var/www/html
 
 STOPSIGNAL SIGQUIT
 
