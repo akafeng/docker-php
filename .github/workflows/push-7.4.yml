@@ -1,0 +1,46 @@
+name: Docker Build for PHP 7.4
+
+on:
+  push:
+    branches:
+      - '**'
+    paths:
+      - 'Dockerfile-7.4'
+      - 'docker-*'
+
+env:
+  USERNAME: akafeng
+  REPOSITORY: php
+  GITHUB_PACKAGE_REGISTRY: docker.pkg.github.com
+  VERSION: 7.4
+
+jobs:
+  build:
+    name: Build Testing
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.0.0
+
+      - name: Docker Login
+        run: echo ${{ secrets.GITHUB_TOKEN }} | docker login ${{ env.GITHUB_PACKAGE_REGISTRY }} -u ${{ env.USERNAME }} --password-stdin
+
+      - name: Docker Build
+        env:
+          DOCKERFILE: Dockerfile-${{ env.VERSION }}
+          STAGE_CACHE: ${{ env.GITHUB_PACKAGE_REGISTRY }}/${{ github.repository }}/${{ env.REPOSITORY }}:${{ env.VERSION }}-stage
+          MAJOR_TAG: ${{ env.USERNAME }}/${{ env.REPOSITORY }}:${{ env.VERSION }}
+        run: |
+          docker pull ${{ env.STAGE_CACHE }} || true
+          docker pull ${{ env.MAJOR_TAG }} || true
+          docker build \
+            --target builder \
+            --cache-from=${{ env.STAGE_CACHE }} \
+            --tag=${{ env.STAGE_CACHE }} \
+            --file=${{ env.DOCKERFILE }} .
+          docker build \
+            --cache-from=${{ env.STAGE_CACHE }},${{ env.MAJOR_TAG }} \
+            --file=${{ env.DOCKERFILE }} .
+
+      - name: Docker Publish
+        run: docker push ${{ env.GITHUB_PACKAGE_REGISTRY }}/${{ github.repository }}/${{ env.REPOSITORY }}
