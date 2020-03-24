@@ -22,7 +22,7 @@ RUN set -eux \
         ca-certificates \
         wget \
         gnupg \
-    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /var/lib/apt/lists/* /var/log/* \
     \
     && mkdir -p /usr/src \
     && cd /usr/src \
@@ -60,7 +60,7 @@ RUN set -eux \
         libssl-dev \
         libxml2-dev \
         zlib1g-dev \
-    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /var/lib/apt/lists/* /var/log/* \
     \
     && docker-php-source extract \
     && mkdir -p "$PHP_INI_DIR/conf.d" \
@@ -134,7 +134,7 @@ RUN apt-get update -qyy \
         libjpeg62-turbo-dev \
         libxpm-dev \
         libfreetype6-dev \
-    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /var/lib/apt/lists/* /var/log/* \
     \
     # temporary "freetype-config" workaround for https://github.com/docker-library/php/issues/865 (https://bugs.php.net/bug.php?id=76324)
     && { echo '#!/bin/sh'; echo 'exec pkg-config "$@" freetype2'; } > /usr/local/bin/freetype-config \
@@ -161,7 +161,7 @@ RUN docker-php-ext-install -j "$(nproc)" gettext \
 RUN apt-get update -qyy \
     && apt-get install -qyy --no-install-recommends --no-install-suggests \
         libgmp-dev \
-    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /var/lib/apt/lists/* /var/log/* \
     \
     && docker-php-ext-install -j "$(nproc)" gmp \
     && { rm -rf /usr/local/lib/php/test/gmp || true; } \
@@ -171,7 +171,7 @@ RUN apt-get update -qyy \
 RUN apt-get update -qyy \
     && apt-get install -qyy --no-install-recommends --no-install-suggests \
         libmagickwand-dev \
-    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /var/lib/apt/lists/* /var/log/* \
     \
     && { pickle install imagick --no-interaction --defaults || true; } \
     && cd /tmp/imagick/imagick* \
@@ -192,7 +192,7 @@ RUN docker-php-ext-install -j "$(nproc)" intl \
 RUN apt-get update -qyy \
     && apt-get install -qyy --no-install-recommends --no-install-suggests \
         libmemcached-dev \
-    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /var/lib/apt/lists/* /var/log/* \
     \
     && { pickle install memcached --no-interaction --defaults || true; } \
     && cd /tmp/memcached/memcached* \
@@ -228,7 +228,7 @@ RUN docker-php-ext-install -j "$(nproc)" pdo_mysql \
 RUN apt-get update -qyy \
     && apt-get install -qyy --no-install-recommends --no-install-suggests \
         libpq-dev \
-    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /var/lib/apt/lists/* /var/log/* \
     \
     && docker-php-ext-install -j "$(nproc)" pdo_pgsql \
     && { rm -rf /usr/local/lib/php/test/pdo_pgsql || true; } \
@@ -294,7 +294,7 @@ RUN docker-php-ext-install -j "$(nproc)" sysvsem \
 RUN apt-get update -qyy \
     && apt-get install -qyy --no-install-recommends --no-install-suggests \
         libtidy-dev \
-    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /var/lib/apt/lists/* /var/log/* \
     \
     && docker-php-ext-install -j "$(nproc)" tidy \
     && { rm -rf /usr/local/lib/php/test/tidy || true; } \
@@ -309,7 +309,7 @@ RUN docker-php-ext-install -j "$(nproc)" xmlrpc \
 RUN apt-get update -qyy \
     && apt-get install -qyy --no-install-recommends --no-install-suggests \
         libxslt1-dev \
-    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /var/lib/apt/lists/* /var/log/* \
     \
     && docker-php-ext-install -j "$(nproc)" xsl \
     && { rm -rf /usr/local/lib/php/test/xsl || true; } \
@@ -319,7 +319,7 @@ RUN apt-get update -qyy \
 RUN apt-get update -qyy \
     && apt-get install -qyy --no-install-recommends --no-install-suggests \
         libzip-dev \
-    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /var/lib/apt/lists/* /var/log/* \
     \
     && docker-php-ext-install -j "$(nproc)" zip \
     && { rm -rf /usr/local/lib/php/test/zip || true; } \
@@ -342,11 +342,12 @@ RUN set -eux \
     && apt-get update -qyy \
     && apt-get install -qyy --no-install-recommends --no-install-suggests \
         cron \
+        openssl \
+        ca-certificates \
         libargon2-1 \
         libcurl4 \
         libedit2 \
         libsodium23 \
-        libssl1.1 \
         libxml2 \
         libncurses6 \
         libpng16-16 \
@@ -362,7 +363,7 @@ RUN set -eux \
         libtidy5deb1 \
         libxslt1.1 \
         libzip4 \
-    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /var/lib/apt/lists/* /var/log/* \
     \
     && mkdir -p /var/www/html \
     && chown www-data:www-data /var/www/html \
