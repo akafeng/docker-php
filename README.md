@@ -11,20 +11,20 @@
 
 ---
 
-## Quick Start
+### Quick Start
 
 ```bash
 $ docker pull akafeng/php
 ```
 
-## Environment Variables
+### Environment Variables
 
-| Name | Type | Default | Example |
-| --- | --- | ---- | ---- |
-| TZ | String | UTC | Asia/Shanghai |
-| ENABLE_CRONTAB | Boolean | - | true |
+| Name | Default | Example |
+| --- | ---- | ---- |
+| TZ | UTC | Asia/Shanghai |
+| ENABLE_CRONTAB | - | true |
 
-## Extension
+### Extension
 
 ```
 [PHP Modules]
@@ -91,6 +91,6 @@ zlib
 Zend OPcache
 ```
 
-## Thanks
+### Thanks
 
 - [@metowolf](http://github.com/metowolf)

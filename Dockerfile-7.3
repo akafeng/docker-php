@@ -2,9 +2,9 @@ FROM debian:buster-slim as builder
 
 LABEL maintainer="akafeng <i@sjy.im>, metowolf <i@i-meto.com>"
 
-ARG PHP_VERSION="7.3.16"
+ARG PHP_VERSION="7.3.17"
 ARG GPG_KEYS="CBAF69F173A0FEA4B537F470D66C9593118BCCB6 F38252826ACD957EF380D39F2F7956BC5DA04B5D"
-ARG COMPOSER_VERSION="1.10.1"
+ARG COMPOSER_VERSION="1.10.5"
 
 ARG PHP_URL="https://www.php.net/get/php-$PHP_VERSION.tar.xz/from/this/mirror"
 ARG PHP_ASC_URL="https://www.php.net/get/php-$PHP_VERSION.tar.xz.asc/from/this/mirror"

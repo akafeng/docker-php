@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2.0.0
+        uses: actions/checkout@v2.1.0
 
       - name: Process Version
         id: version
@@ -32,22 +32,23 @@ jobs:
         env:
           DOCKERFILE: Dockerfile-${{ steps.version.outputs.major }}.${{ steps.version.outputs.minor }}
           STAGE_CACHE: ${{ env.GITHUB_PACKAGE_REGISTRY }}/${{ github.repository }}/${{ env.REPOSITORY }}:${{ steps.version.outputs.major }}.${{ steps.version.outputs.minor }}-stage
-          MAJOR_TAG: ${{ env.USERNAME }}/${{ env.REPOSITORY }}:${{ steps.version.outputs.major }}.${{ steps.version.outputs.minor }}
+          MINOR_TAG: ${{ env.USERNAME }}/${{ env.REPOSITORY }}:${{ steps.version.outputs.major }}.${{ steps.version.outputs.minor }}
           PATCH_TAG: ${{ env.USERNAME }}/${{ env.REPOSITORY }}:${{ steps.version.outputs.major }}.${{ steps.version.outputs.minor }}.${{ steps.version.outputs.patch }}
         run: |
           docker pull ${{ env.STAGE_CACHE }} || true
-          docker pull ${{ env.MAJOR_TAG }} || true
+          docker pull ${{ env.MINOR_TAG }} || true
           docker build \
-            --cache-from=${{ env.STAGE_CACHE }},${{ env.MAJOR_TAG }} \
-            --tag=${{ env.MAJOR_TAG }} \
+            --cache-from=${{ env.STAGE_CACHE }},${{ env.MINOR_TAG }} \
+            --tag=${{ env.MINOR_TAG }} \
             --tag=${{ env.PATCH_TAG }} \
-            --file=${{ env.DOCKERFILE }} .
+            --file=${{ env.DOCKERFILE }} \
+            .
 
       - name: Create Latest Tag
         if: contains(github.ref, env.LATEST_VERSION)
         run: |
-          docker tag ${{ env.USERNAME }}/${{ env.REPOSITORY }}:${{ steps.version.outputs.tag }} ${{ env.USERNAME }}/$REPOSITORY:${{ steps.version.outputs.major }}
-          docker tag ${{ env.USERNAME }}/${{ env.REPOSITORY }}:${{ steps.version.outputs.tag }} ${{ env.USERNAME }}/$REPOSITORY:latest
+          docker tag ${{ env.USERNAME }}/${{ env.REPOSITORY }}:${{ steps.version.outputs.tag }} ${{ env.USERNAME }}/${{ env.REPOSITORY }}:${{ steps.version.outputs.major }}
+          docker tag ${{ env.USERNAME }}/${{ env.REPOSITORY }}:${{ steps.version.outputs.tag }} ${{ env.USERNAME }}/${{ env.REPOSITORY }}:latest
 
       - name: Docker Publish
-        run: docker push ${{ env.USERNAME }}/$REPOSITORY
+        run: docker push ${{ env.USERNAME }}/${{ env.REPOSITORY }}
