@@ -1,10 +1,10 @@
-FROM debian:buster-slim as builder
+FROM debian:buster-slim AS builder
 
-LABEL maintainer="akafeng <i@sjy.im>, metowolf <i@i-meto.com>"
+LABEL maintainer="metowolf <i@i-meto.com>, akafeng <i@sjy.im>"
 
-ARG PHP_VERSION="7.4.5"
+ARG PHP_VERSION="7.4.6"
 ARG GPG_KEYS="42670A7FE4D0441C8E4632349E4FDC074A4EF02D 5A52880781F755608BF815FC910DEB46F53EA312"
-ARG COMPOSER_VERSION="1.10.5"
+ARG COMPOSER_VERSION="1.10.6"
 
 ARG PHP_URL="https://www.php.net/get/php-$PHP_VERSION.tar.xz/from/this/mirror"
 ARG PHP_ASC_URL="https://www.php.net/get/php-$PHP_VERSION.tar.xz.asc/from/this/mirror"
@@ -328,9 +328,11 @@ RUN wget -O /usr/local/bin/composer "$COMPOSER_URL" \
 # strip extensions
 RUN strip --strip-all `php-config --extension-dir`/*.so
 
+######
+
 FROM debian:buster-slim
 
-LABEL maintainer="akafeng <i@sjy.im>, metowolf <i@i-meto.com>"
+LABEL maintainer="metowolf <i@i-meto.com>, akafeng <i@sjy.im>"
 
 COPY --from=builder /usr/local/ /usr/local/
 
