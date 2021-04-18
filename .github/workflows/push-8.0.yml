@@ -1,18 +1,18 @@
-name: Docker Build for PHP 7.3
+name: Docker Build for PHP 8.0
 
 on:
   push:
     branches:
       - '**'
     paths:
-      - 'Dockerfile-7.3'
+      - 'Dockerfile-8.0'
       - 'docker-*'
 
 env:
   USERNAME: akafeng
   REPOSITORY: php
   GITHUB_PACKAGE_REGISTRY: docker.pkg.github.com
-  VERSION: 7.3
+  VERSION: 8.0
 
 jobs:
   build:

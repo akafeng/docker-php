@@ -29,18 +29,14 @@ jobs:
         env:
           DOCKERFILE: Dockerfile-${{ env.VERSION }}
           STAGE_CACHE: ${{ env.GITHUB_PACKAGE_REGISTRY }}/${{ github.repository }}/${{ env.REPOSITORY }}:${{ env.VERSION }}-stage
-          MINOR_TAG: ${{ env.USERNAME }}/${{ env.REPOSITORY }}:${{ env.VERSION }}
         run: |
-          docker pull ${{ env.STAGE_CACHE }} || true
-          docker pull ${{ env.MINOR_TAG }} || true
           docker build \
             --target builder \
-            --cache-from=${{ env.STAGE_CACHE }} \
             --tag=${{ env.STAGE_CACHE }} \
             --file=${{ env.DOCKERFILE }} \
             .
           docker build \
-            --cache-from=${{ env.STAGE_CACHE }},${{ env.MINOR_TAG }} \
+            --cache-from=${{ env.STAGE_CACHE }} \
             --file=${{ env.DOCKERFILE }} \
             .
 

@@ -9,7 +9,7 @@ env:
   USERNAME: akafeng
   REPOSITORY: php
   GITHUB_PACKAGE_REGISTRY: docker.pkg.github.com
-  LATEST_VERSION: 7.4
+  LATEST_VERSION: 8.0
 
 jobs:
   publish:
@@ -36,9 +36,8 @@ jobs:
           PATCH_TAG: ${{ env.USERNAME }}/${{ env.REPOSITORY }}:${{ steps.version.outputs.major }}.${{ steps.version.outputs.minor }}.${{ steps.version.outputs.patch }}
         run: |
           docker pull ${{ env.STAGE_CACHE }} || true
-          docker pull ${{ env.MINOR_TAG }} || true
           docker build \
-            --cache-from=${{ env.STAGE_CACHE }},${{ env.MINOR_TAG }} \
+            --cache-from=${{ env.STAGE_CACHE }} \
             --tag=${{ env.MINOR_TAG }} \
             --tag=${{ env.PATCH_TAG }} \
             --file=${{ env.DOCKERFILE }} \
