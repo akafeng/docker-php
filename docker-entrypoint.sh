@@ -1,11 +1,11 @@
 #!/bin/sh
 set -e
 
-if [ ! -z "$TZ" ] && [ -f "/usr/share/zoneinfo/$TZ" ]; then
-    echo "date.timezone = $TZ" > /usr/local/etc/php/conf.d/timezone.ini
+if [ ! -z "${TZ}" ] && [ -f "/usr/share/zoneinfo/${TZ}" ]; then
+    echo "date.timezone = ${TZ}" > /usr/local/etc/php/conf.d/timezone.ini
 fi
 
-if [ ! -z "$ENABLE_CRONTAB" ]; then
+if [ ! -z "${ENABLE_CRONTAB}" ]; then
     cron -f &
 fi
 
