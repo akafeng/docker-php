@@ -12,7 +12,7 @@ env:
   USERNAME: akafeng
   REPOSITORY: php
   GITHUB_PACKAGE_REGISTRY: docker.pkg.github.com
-  VERSION: 7.4
+  VERSION: '7.4'
 
 jobs:
   build:

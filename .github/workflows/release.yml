@@ -9,7 +9,7 @@ env:
   USERNAME: akafeng
   REPOSITORY: php
   GITHUB_PACKAGE_REGISTRY: docker.pkg.github.com
-  LATEST_VERSION: 8.0
+  LATEST_VERSION: '8.0'
 
 jobs:
   publish:
