@@ -2,7 +2,7 @@ FROM debian:buster-slim AS builder
 
 LABEL maintainer="metowolf <i@i-meto.com>, akafeng <i@sjy.im>"
 
-ARG PHP_VERSION="7.3.27"
+ARG PHP_VERSION="7.3.28"
 ARG PHP_GPG_KEYS="CBAF69F173A0FEA4B537F470D66C9593118BCCB6 F38252826ACD957EF380D39F2F7956BC5DA04B5D"
 ARG PHP_URL="https://mirror.cogentco.com/pub/php/php-${PHP_VERSION}.tar.xz"
 ARG PHP_ASC_URL="https://mirror.cogentco.com/pub/php/php-${PHP_VERSION}.tar.xz.asc"
@@ -15,7 +15,7 @@ ARG PHP_INI_DIR="/usr/local/etc/php"
 ARG PICKLE_VERSION="0.7.2"
 ARG PICKLE_URL="https://github.com/FriendsOfPHP/pickle/releases/download/v${PICKLE_VERSION}/pickle.phar"
 
-ARG COMPOSER_VERSION="2.0.12"
+ARG COMPOSER_VERSION="2.0.13"
 ARG COMPOSER_URL="https://getcomposer.org/download/${COMPOSER_VERSION}/composer.phar"
 
 RUN set -eux \
@@ -80,7 +80,7 @@ RUN set -eux \
         --with-password-argon2 \
         --with-sodium=shared \
         --with-pdo-sqlite=/usr \
-		--with-sqlite3=/usr \
+        --with-sqlite3=/usr \
         --with-curl \
         --with-libedit \
         --with-openssl \
