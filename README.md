@@ -2,6 +2,15 @@
     <img src="https://www.php.net/images/logos/php-logo.svg" width="150" />
 </p>
 
+<h1 align="center">PHP</h1>
+
+<p align="center">A popular general-purpose scripting language.</p>
+
+<p align="center">
+    <a href="https://hub.docker.com/r/akafeng/php">Docker Hub</a> ·
+    <a href="https://github.com/php/php-src">Project Source</a>
+</p>
+
 <p align="center">
     <img src="https://img.shields.io/docker/v/akafeng/php?sort=semver" />
     <img src="https://img.shields.io/docker/pulls/akafeng/php" />
