@@ -5,7 +5,7 @@ LABEL \
     org.opencontainers.image.authors="metowolf <i@i-meto.com>, akafeng <i@sjy.im>" \
     org.opencontainers.image.source="https://github.com/akafeng/docker-php"
 
-ARG PHP_VERSION="8.0.8"
+ARG PHP_VERSION="8.0.9"
 ARG PHP_GPG_KEYS="1729F83938DA44E27BA0F4D3DBDB397470D12172 BFDDD28642824F8118EF77909B67A5C12229118F"
 ARG PHP_URL="https://mirror.cogentco.com/pub/php/php-${PHP_VERSION}.tar.xz"
 ARG PHP_ASC_URL="https://mirror.cogentco.com/pub/php/php-${PHP_VERSION}.tar.xz.asc"
