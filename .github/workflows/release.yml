@@ -8,7 +8,7 @@ on:
 env:
   USERNAME: akafeng
   REPOSITORY: php
-  GITHUB_PACKAGE_REGISTRY: docker.pkg.github.com
+  PACKAGE_REGISTRY: ghcr.io
   LATEST_VERSION: '8.0'
 
 jobs:
@@ -25,13 +25,13 @@ jobs:
 
       - name: Docker Login
         run: |
-          echo ${{ secrets.GITHUB_TOKEN }} | docker login ${{ env.GITHUB_PACKAGE_REGISTRY }} -u ${{ env.USERNAME }} --password-stdin
+          echo ${{ secrets.GITHUB_TOKEN }} | docker login ${{ env.PACKAGE_REGISTRY }} -u ${{ env.USERNAME }} --password-stdin
           echo ${{ secrets.DOCKER_TOKEN }} | docker login -u ${{ env.USERNAME }} --password-stdin
 
       - name: Docker Build
         env:
           DOCKERFILE: Dockerfile-${{ steps.version.outputs.major }}.${{ steps.version.outputs.minor }}
-          STAGE_CACHE: ${{ env.GITHUB_PACKAGE_REGISTRY }}/${{ github.repository }}/${{ env.REPOSITORY }}:${{ steps.version.outputs.major }}.${{ steps.version.outputs.minor }}-stage
+          STAGE_CACHE: ${{ env.PACKAGE_REGISTRY }}/${{ env.USERNAME }}/${{ env.REPOSITORY }}:${{ steps.version.outputs.major }}.${{ steps.version.outputs.minor }}-stage
           MINOR_TAG: ${{ env.USERNAME }}/${{ env.REPOSITORY }}:${{ steps.version.outputs.major }}.${{ steps.version.outputs.minor }}
           PATCH_TAG: ${{ env.USERNAME }}/${{ env.REPOSITORY }}:${{ steps.version.outputs.major }}.${{ steps.version.outputs.minor }}.${{ steps.version.outputs.patch }}
         run: |
