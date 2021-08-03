@@ -1,8 +1,11 @@
 FROM debian:buster-slim AS builder
 
-LABEL maintainer="metowolf <i@i-meto.com>, akafeng <i@sjy.im>"
+LABEL \
+    org.opencontainers.image.title="php" \
+    org.opencontainers.image.authors="metowolf <i@i-meto.com>, akafeng <i@sjy.im>" \
+    org.opencontainers.image.source="https://github.com/akafeng/docker-php"
 
-ARG PHP_VERSION="7.4.20"
+ARG PHP_VERSION="7.4.21"
 ARG PHP_GPG_KEYS="42670A7FE4D0441C8E4632349E4FDC074A4EF02D 5A52880781F755608BF815FC910DEB46F53EA312"
 ARG PHP_URL="https://mirror.cogentco.com/pub/php/php-${PHP_VERSION}.tar.xz"
 ARG PHP_ASC_URL="https://mirror.cogentco.com/pub/php/php-${PHP_VERSION}.tar.xz.asc"
@@ -12,10 +15,10 @@ ARG PHP_CPPFLAGS="${PHP_CFLAGS}"
 ARG PHP_LDFLAGS="-Wl,-O1 -pie"
 ARG PHP_INI_DIR="/usr/local/etc/php"
 
-ARG PICKLE_VERSION="0.7.2"
+ARG PICKLE_VERSION="0.7.4"
 ARG PICKLE_URL="https://github.com/FriendsOfPHP/pickle/releases/download/v${PICKLE_VERSION}/pickle.phar"
 
-ARG COMPOSER_VERSION="2.0.13"
+ARG COMPOSER_VERSION="2.1.5"
 ARG COMPOSER_URL="https://getcomposer.org/download/${COMPOSER_VERSION}/composer.phar"
 
 RUN set -eux \
@@ -329,7 +332,10 @@ RUN strip --strip-all `php-config --extension-dir`/*.so
 
 FROM debian:buster-slim
 
-LABEL maintainer="metowolf <i@i-meto.com>, akafeng <i@sjy.im>"
+LABEL \
+    org.opencontainers.image.title="php" \
+    org.opencontainers.image.authors="metowolf <i@i-meto.com>, akafeng <i@sjy.im>" \
+    org.opencontainers.image.source="https://github.com/akafeng/docker-php"
 
 COPY --from=builder /usr/local/ /usr/local/
 

@@ -14,7 +14,6 @@
 <p align="center">
     <img src="https://img.shields.io/docker/v/akafeng/php?sort=semver" />
     <img src="https://img.shields.io/docker/pulls/akafeng/php" />
-    <img src="https://img.shields.io/microbadger/layers/akafeng/php" />
     <img src="https://img.shields.io/docker/image-size/akafeng/php?sort=semver" />
 </p>
 
