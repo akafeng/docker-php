@@ -7,14 +7,15 @@
 <p align="center">A popular general-purpose scripting language.</p>
 
 <p align="center">
-    <a href="https://hub.docker.com/r/akafeng/php">Docker Hub</a> ·
+    <a href="https://ghcr.io/akafeng/php">Container Registry</a> ·
     <a href="https://github.com/php/php-src">Project Source</a>
 </p>
 
 <p align="center">
-    <img src="https://img.shields.io/docker/v/akafeng/php?sort=semver" />
-    <img src="https://img.shields.io/docker/pulls/akafeng/php" />
-    <img src="https://img.shields.io/docker/image-size/akafeng/php?sort=semver" />
+    <img src="https://img.shields.io/github/workflow/status/akafeng/docker-php/Docker%20Build" />
+    <img src="https://img.shields.io/github/last-commit/akafeng/docker-php" />
+    <img src="https://img.shields.io/github/v/release/akafeng/docker-php" />
+    <img src="https://img.shields.io/github/release-date/akafeng/docker-php" />
 </p>
 
 ---
@@ -22,7 +23,7 @@
 ### Quick Start
 
 ```bash
-$ docker pull akafeng/php
+$ docker pull ghcr.io/akafeng/php
 ```
 
 ### Environment Variables
