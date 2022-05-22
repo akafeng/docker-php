@@ -1,11 +1,6 @@
-FROM debian:buster-slim AS builder
+FROM debian:bullseye-slim AS builder
 
-LABEL \
-    org.opencontainers.image.title="php" \
-    org.opencontainers.image.authors="metowolf <i@i-meto.com>, akafeng <i@sjy.im>" \
-    org.opencontainers.image.source="https://github.com/akafeng/docker-php"
-
-ARG PHP_VERSION="8.0.9"
+ARG PHP_VERSION="8.0.19"
 ARG PHP_GPG_KEYS="1729F83938DA44E27BA0F4D3DBDB397470D12172 BFDDD28642824F8118EF77909B67A5C12229118F"
 ARG PHP_URL="https://mirror.cogentco.com/pub/php/php-${PHP_VERSION}.tar.xz"
 ARG PHP_ASC_URL="https://mirror.cogentco.com/pub/php/php-${PHP_VERSION}.tar.xz.asc"
@@ -15,10 +10,10 @@ ARG PHP_CPPFLAGS="${PHP_CFLAGS}"
 ARG PHP_LDFLAGS="-Wl,-O1 -pie"
 ARG PHP_INI_DIR="/usr/local/etc/php"
 
-ARG PICKLE_VERSION="0.7.4"
+ARG PICKLE_VERSION="0.7.9"
 ARG PICKLE_URL="https://github.com/FriendsOfPHP/pickle/releases/download/v${PICKLE_VERSION}/pickle.phar"
 
-ARG COMPOSER_VERSION="2.1.5"
+ARG COMPOSER_VERSION="2.3.5"
 ARG COMPOSER_URL="https://getcomposer.org/download/${COMPOSER_VERSION}/composer.phar"
 
 RUN set -eux \
@@ -51,9 +46,8 @@ RUN set -eux \
     \
     && export GNUPGHOME=$(mktemp -d); \
         for key in ${PHP_GPG_KEYS}; do \
-            gpg --batch --keyserver ha.pool.sks-keyservers.net --keyserver-options timeout=10 --recv-keys ${key} || \
-            gpg --batch --keyserver hkp://ipv4.pool.sks-keyservers.net --keyserver-options timeout=10 --recv-keys ${key} || \
-            gpg --batch --keyserver hkp://pgp.mit.edu:80 --keyserver-options timeout=10 --recv-keys ${key}; \
+            gpg --batch --keyserver hkps://pgp.surf.nl --keyserver-options timeout=10 --recv-keys ${key} || \
+            gpg --batch --keyserver hkps://keyserver.ubuntu.com --keyserver-options timeout=10 --recv-keys ${key}; \
         done \
     && gpg --batch --verify php.tar.xz.asc php.tar.xz \
     && gpgconf --kill all \
@@ -172,20 +166,20 @@ RUN apt-get update -qyy \
     && { rm -rf /usr/local/lib/php/doc/gmp/ || true; }
 
 # imagick
-# RUN apt-get update -qyy \
-#     && apt-get install -qyy --no-install-recommends --no-install-suggests \
-#         libmagickwand-dev \
-#     && rm -rf /var/lib/apt/lists/* /var/log/* \
-#     \
-#     && { pickle install imagick --no-interaction --defaults || true; } \
-#     && cd /tmp/imagick/imagick*/ \
-#     && phpize \
-#     && ./configure \
-#     && make -j $(nproc) \
-#     && make install \
-#     && docker-php-ext-enable imagick \
-#     && { rm -rf /usr/local/lib/php/test/imagick/ || true; } \
-#     && { rm -rf /usr/local/lib/php/doc/imagick/ || true; }
+RUN apt-get update -qyy \
+    && apt-get install -qyy --no-install-recommends --no-install-suggests \
+        libmagickwand-dev \
+    && rm -rf /var/lib/apt/lists/* /var/log/* \
+    \
+    && { pickle install imagick --no-interaction --defaults || true; } \
+    && cd /tmp/imagick/imagick*/ \
+    && phpize \
+    && ./configure \
+    && make -j $(nproc) \
+    && make install \
+    && docker-php-ext-enable imagick \
+    && { rm -rf /usr/local/lib/php/test/imagick/ || true; } \
+    && { rm -rf /usr/local/lib/php/doc/imagick/ || true; }
 
 # intl
 RUN docker-php-ext-install -j $(nproc) intl \
@@ -325,12 +319,7 @@ RUN strip --strip-all `php-config --extension-dir`/*.so
 
 ######
 
-FROM debian:buster-slim
-
-LABEL \
-    org.opencontainers.image.title="php" \
-    org.opencontainers.image.authors="metowolf <i@i-meto.com>, akafeng <i@sjy.im>" \
-    org.opencontainers.image.source="https://github.com/akafeng/docker-php"
+FROM debian:bullseye-slim
 
 COPY --from=builder /usr/local/ /usr/local/
 
@@ -349,8 +338,8 @@ RUN set -eux \
         libxml2 \
         libncurses6 \
         libgd3 \
-        # libmagickwand-6.q16-6 \
-        libicu63 \
+        libmagickwand-6.q16-6 \
+        libicu67 \
         libmemcached11 \
         libmemcachedutil2 \
         libpq5 \
