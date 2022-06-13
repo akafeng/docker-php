@@ -10,10 +10,10 @@ ARG PHP_CPPFLAGS="${PHP_CFLAGS}"
 ARG PHP_LDFLAGS="-Wl,-O1 -pie"
 ARG PHP_INI_DIR="/usr/local/etc/php"
 
-ARG PICKLE_VERSION="0.7.9"
+ARG PICKLE_VERSION="0.7.11"
 ARG PICKLE_URL="https://github.com/FriendsOfPHP/pickle/releases/download/v${PICKLE_VERSION}/pickle.phar"
 
-ARG COMPOSER_VERSION="2.3.5"
+ARG COMPOSER_VERSION="2.3.7"
 ARG COMPOSER_URL="https://getcomposer.org/download/${COMPOSER_VERSION}/composer.phar"
 
 RUN set -eux \
