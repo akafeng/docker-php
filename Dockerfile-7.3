@@ -166,6 +166,11 @@ RUN apt-get update -qyy \
         libgmp-dev \
     && rm -rf /var/lib/apt/lists/* /var/log/* \
     \
+    # fix i386 install
+    && if [[ `uname -m` == 'i386' ]]; then \
+            ln -sf /usr/include/i386-linux-gnu/gmp.h /usr/include/gmp.h; \
+        fi \
+    \
     && docker-php-ext-install -j $(nproc) gmp \
     && { rm -rf /usr/local/lib/php/test/gmp/ || true; } \
     && { rm -rf /usr/local/lib/php/doc/gmp/ || true; }
