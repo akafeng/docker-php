@@ -168,7 +168,7 @@ RUN apt-get update -qyy \
     \
     # fix i386 install
     && sysArch=$(uname -m) \
-    && if [ $sysArch == "i386" ]; then \
+    && if [ $sysArch = "i386" ]; then \
             ln -sf /usr/include/i386-linux-gnu/gmp.h /usr/include/gmp.h; \
         fi \
     \
