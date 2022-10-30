@@ -13,7 +13,7 @@ ARG PHP_INI_DIR="/usr/local/etc/php"
 ARG PICKLE_VERSION="0.7.11"
 ARG PICKLE_URL="https://github.com/FriendsOfPHP/pickle/releases/download/v${PICKLE_VERSION}/pickle.phar"
 
-ARG COMPOSER_VERSION="2.3.7"
+ARG COMPOSER_VERSION="2.4.4"
 ARG COMPOSER_URL="https://getcomposer.org/download/${COMPOSER_VERSION}/composer.phar"
 
 RUN set -eux \
@@ -165,12 +165,6 @@ RUN apt-get update -qyy \
     && apt-get install -qyy --no-install-recommends --no-install-suggests \
         libgmp-dev \
     && rm -rf /var/lib/apt/lists/* /var/log/* \
-    \
-    # fix i386 install
-    && sysArch=$(uname -m) \
-    && if [ "$sysArch" = "i386" ] || [ "$sysArch" = "i686" ]; then \
-            ln -sf /usr/include/i386-linux-gnu/gmp.h /usr/include/gmp.h; \
-        fi \
     \
     && docker-php-ext-install -j $(nproc) gmp \
     && { rm -rf /usr/local/lib/php/test/gmp/ || true; } \
