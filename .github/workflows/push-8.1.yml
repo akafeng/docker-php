@@ -15,9 +15,6 @@ jobs:
   build:
     name: Build Testing
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        build-platforms: ['linux/amd64', 'linux/arm/v7', 'linux/arm64/v8']
     steps:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -30,6 +27,9 @@ jobs:
         with:
           file: Dockerfile-${{ env.VERSION }}
           target: builder
-          platforms: ${{ matrix.build-platforms }}
+          platforms: |
+            linux/amd64
+            linux/arm/v7
+            linux/arm64/v8
           cache-to: type=gha, mode=max
           outputs: type=cacheonly
