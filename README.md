@@ -12,7 +12,7 @@
 </p>
 
 <p align="center">
-    <img src="https://img.shields.io/github/workflow/status/akafeng/docker-php/Docker%20Build" />
+    <img src="https://img.shields.io/github/actions/workflow/status/akafeng/docker-php/push-8.2.yml?branch=main" />
     <img src="https://img.shields.io/github/last-commit/akafeng/docker-php" />
     <img src="https://img.shields.io/github/v/release/akafeng/docker-php" />
     <img src="https://img.shields.io/github/release-date/akafeng/docker-php" />

@@ -1,6 +1,6 @@
-FROM debian:bullseye-slim AS builder
+FROM debian:bookworm-slim AS builder
 
-ARG PHP_VERSION="8.1.12"
+ARG PHP_VERSION="8.1.23"
 ARG PHP_GPG_KEYS="528995BFEDFBA7191D46839EF9BA0ADA31CBD89E 39B641343D8C104B2B146DC3F9C39DC0B9698544 F1F692238FBC1666E5A5CCD4199F9DFEF6FFBAFD"
 ARG PHP_URL="https://mirror.cogentco.com/pub/php/php-${PHP_VERSION}.tar.xz"
 ARG PHP_ASC_URL="https://mirror.cogentco.com/pub/php/php-${PHP_VERSION}.tar.xz.asc"
@@ -13,7 +13,7 @@ ARG PHP_INI_DIR="/usr/local/etc/php"
 ARG PICKLE_VERSION="0.7.11"
 ARG PICKLE_URL="https://github.com/FriendsOfPHP/pickle/releases/download/v${PICKLE_VERSION}/pickle.phar"
 
-ARG COMPOSER_VERSION="2.4.4"
+ARG COMPOSER_VERSION="2.6.2"
 ARG COMPOSER_URL="https://getcomposer.org/download/${COMPOSER_VERSION}/composer.phar"
 
 RUN set -eux \
@@ -83,6 +83,7 @@ RUN set -eux \
         --with-libedit \
         --with-openssl \
         --with-zlib \
+        --disable-phpdbg \
         --with-pear \
         --enable-fpm \
         --with-fpm-user=www-data \
@@ -319,7 +320,7 @@ RUN strip --strip-all `php-config --extension-dir`/*.so
 
 ######
 
-FROM debian:bullseye-slim
+FROM debian:bookworm-slim
 
 COPY --from=builder /usr/local/ /usr/local/
 
@@ -339,7 +340,7 @@ RUN set -eux \
         libncurses6 \
         libgd3 \
         libmagickwand-6.q16-6 \
-        libicu67 \
+        libicu72 \
         libmemcached11 \
         libmemcachedutil2 \
         libpq5 \
