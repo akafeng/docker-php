@@ -1,4 +1,4 @@
-FROM debian:bookworm-slim AS builder
+FROM debian:bullseye-slim AS builder
 
 ARG PHP_VERSION="7.4.33"
 ARG PHP_GPG_KEYS="42670A7FE4D0441C8E4632349E4FDC074A4EF02D 5A52880781F755608BF815FC910DEB46F53EA312"
@@ -325,7 +325,7 @@ RUN strip --strip-all `php-config --extension-dir`/*.so
 
 ######
 
-FROM debian:bookworm-slim
+FROM debian:bullseye-slim
 
 COPY --from=builder /usr/local/ /usr/local/
 
@@ -345,7 +345,7 @@ RUN set -eux \
         libncurses6 \
         libgd3 \
         libmagickwand-6.q16-6 \
-        libicu72 \
+        libicu67 \
         libmemcached11 \
         libmemcachedutil2 \
         libpq5 \
