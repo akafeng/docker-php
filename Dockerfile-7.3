@@ -13,8 +13,10 @@ ARG PHP_INI_DIR="/usr/local/etc/php"
 ARG PICKLE_VERSION="0.7.11"
 ARG PICKLE_URL="https://github.com/FriendsOfPHP/pickle/releases/download/v${PICKLE_VERSION}/pickle.phar"
 
-ARG COMPOSER_VERSION="2.6.2"
+ARG COMPOSER_VERSION="2.6.3"
 ARG COMPOSER_URL="https://getcomposer.org/download/${COMPOSER_VERSION}/composer.phar"
+
+ARG SWOOLE_VERSION="4.8.13"
 
 RUN set -eux \
     && apt-get update -qyy \
@@ -275,7 +277,12 @@ RUN docker-php-ext-enable sodium \
     && { rm -rf /usr/local/lib/php/doc/sodium/ || true; }
 
 # swoole
-RUN { pickle install swoole --no-interaction --defaults || true; } \
+RUN apt-get update -qyy \
+    && apt-get install -qyy --no-install-recommends --no-install-suggests \
+        libc-ares-dev \
+    && rm -rf /var/lib/apt/lists/* /var/log/* \
+    \
+    && { pickle install swoole@${SWOOLE_VERSION} --no-interaction --defaults || true; } \
     && cd /tmp/swoole/swoole*/ \
     && phpize \
     && ./configure \
@@ -283,8 +290,8 @@ RUN { pickle install swoole --no-interaction --defaults || true; } \
         --enable-http2 \
         --enable-swoole-json \
         --enable-swoole-curl \
-        --enable-mysqlnd \
-        --enable-sockets \
+        --enable-cares \
+        --enable-brotli \
     && make -j $(nproc) \
     && make install \
     && docker-php-ext-enable swoole \
@@ -353,6 +360,7 @@ RUN set -eux \
         libmemcached11 \
         libmemcachedutil2 \
         libpq5 \
+        libc-ares2 \
         libtidy5deb1 \
         libxslt1.1 \
         libzip4 \
