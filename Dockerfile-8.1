@@ -16,6 +16,9 @@ ARG PICKLE_URL="https://github.com/FriendsOfPHP/pickle/releases/download/v${PICK
 ARG COMPOSER_VERSION="2.7.1"
 ARG COMPOSER_URL="https://getcomposer.org/download/${COMPOSER_VERSION}/composer.phar"
 
+ARG SWOOLE_VERSION="5.1.2"
+ARG SWOOLE_URL="https://github.com/swoole/swoole-src/archive/refs/tags/v${SWOOLE_VERSION}.tar.gz"
+
 RUN set -eux \
     && apt-get update -qyy \
     && apt-get install -qyy --no-install-recommends --no-install-suggests \
@@ -121,6 +124,7 @@ RUN { pickle install apcu --no-interaction --defaults || true; } \
     && make -j $(nproc) \
     && make install \
     && docker-php-ext-enable apcu \
+    && { rm -rf /tmp/apcu/ || true; } \
     && { rm -rf /usr/local/lib/php/test/apcu/ || true; } \
     && { rm -rf /usr/local/lib/php/doc/apcu/ || true; }
 
@@ -179,6 +183,7 @@ RUN apt-get update -qyy \
     && make -j $(nproc) \
     && make install \
     && docker-php-ext-enable imagick \
+    && { rm -rf /tmp/imagick/ || true; } \
     && { rm -rf /usr/local/lib/php/test/imagick/ || true; } \
     && { rm -rf /usr/local/lib/php/doc/imagick/ || true; }
 
@@ -200,6 +205,7 @@ RUN apt-get update -qyy \
     && make -j $(nproc) \
     && make install \
     && docker-php-ext-enable memcached \
+    && { rm -rf /tmp/memcached/ || true; } \
     && { rm -rf /usr/local/lib/php/test/memcached/ || true; } \
     && { rm -rf /usr/local/lib/php/doc/memcached/ || true; }
 
@@ -246,6 +252,7 @@ RUN { pickle install redis --no-interaction --defaults || true; } \
     && make -j $(nproc) \
     && make install \
     && docker-php-ext-enable redis \
+    && { rm -rf /tmp/redis/ || true; } \
     && { rm -rf /usr/local/lib/php/test/redis/ || true; } \
     && { rm -rf /usr/local/lib/php/doc/redis/ || true; }
 
@@ -275,7 +282,9 @@ RUN apt-get update -qyy \
         libc-ares-dev \
     && rm -rf /var/lib/apt/lists/* /var/log/* \
     \
-    && { pickle install swoole --no-interaction --defaults || true; } \
+    && wget -O swoole.tar.gz ${SWOOLE_URL} \
+    && mkdir /tmp/swoole/ \
+    && tar -xzvf swoole.tar.gz -C /tmp/swoole/ \
     && cd /tmp/swoole/swoole*/ \
     && phpize \
     && ./configure \
@@ -284,9 +293,11 @@ RUN apt-get update -qyy \
         --enable-cares \
         --enable-brotli \
         --enable-swoole-pgsql \
+        --enable-swoole-sqlite \
     && make -j $(nproc) \
     && make install \
     && docker-php-ext-enable swoole \
+    && { rm -rf /tmp/swoole/ || true; } \
     && { rm -rf /usr/local/lib/php/test/swoole/ || true; } \
     && { rm -rf /usr/local/lib/php/doc/swoole/ || true; }
 
