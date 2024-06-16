@@ -1,6 +1,6 @@
 FROM debian:bookworm-slim AS builder
 
-ARG PHP_VERSION="8.3.4"
+ARG PHP_VERSION="8.3.8"
 ARG PHP_GPG_KEYS="1198C0117593497A5EC5C199286AF1F9897469DC C28D937575603EB4ABB725861C0779DC5C0A9DE4 AFD8691FDAEDF03BDF6E460563F15A9B715376CA"
 ARG PHP_URL="https://mirror.cogentco.com/pub/php/php-${PHP_VERSION}.tar.xz"
 ARG PHP_ASC_URL="https://mirror.cogentco.com/pub/php/php-${PHP_VERSION}.tar.xz.asc"
@@ -13,10 +13,10 @@ ARG PHP_INI_DIR="/usr/local/etc/php"
 ARG PICKLE_VERSION="0.7.11"
 ARG PICKLE_URL="https://github.com/FriendsOfPHP/pickle/releases/download/v${PICKLE_VERSION}/pickle.phar"
 
-ARG COMPOSER_VERSION="2.7.2"
+ARG COMPOSER_VERSION="2.7.7"
 ARG COMPOSER_URL="https://getcomposer.org/download/${COMPOSER_VERSION}/composer.phar"
 
-ARG SWOOLE_VERSION="5.1.2"
+ARG SWOOLE_VERSION="5.1.3"
 ARG SWOOLE_URL="https://github.com/swoole/swoole-src/archive/refs/tags/v${SWOOLE_VERSION}.tar.gz"
 
 RUN set -eux \
